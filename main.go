@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"net/http"
 	"projector-api/models"
 	"strconv"
 )
@@ -13,7 +14,6 @@ var (
 )
 
 func main() {
-	// Инициализация базы данных
 	var err error
 	dsn := "user=admin password=admin dbname=mydb sslmode=disable"
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -21,23 +21,21 @@ func main() {
 		panic("Failed to connect to the database")
 	}
 
-	// Создание таблицы проекторов
 	err = db.AutoMigrate(&models.Projector{})
 	if err != nil {
 		panic("Failed to migrate the database")
 	}
 
-	// Создание экземпляра Gin
 	r := gin.Default()
 
-	// Определение маршрутов
+	r.GET("/projectors", getAllProjectors)
 	r.POST("/projectors", createProjector)
+	r.PUT("/projectors/:id", updateProjector)
 	r.GET("/projectors/:id", getProjector)
 	r.PUT("/projectors/:id/turnon", turnOnProjector)
 	r.PUT("/projectors/:id/changemode", changeMode)
 	r.PUT("/projectors/:id/changeresolution", changeResolution)
 
-	// Запуск сервера
 	r.Run(":8080")
 }
 
@@ -49,9 +47,45 @@ func createProjector(c *gin.Context) {
 	}
 
 	// Создание записи в базе данных
-	db.Create(&projector)
+	if err := db.Create(&projector).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(200, projector)
+}
+
+func updateProjector(c *gin.Context) {
+	var projector models.Projector
+	id := c.Params.ByName("id")
+
+	// Поиск проектора по ID
+	if err := db.First(&projector, id).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Projector not found"})
+		return
+	}
+
+	// Обновление параметров проектора
+	if err := c.ShouldBindJSON(&projector); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	db.Save(&projector)
+
+	c.JSON(200, projector)
+}
+
+func getAllProjectors(c *gin.Context) {
+	var projectors []models.Projector
+
+	// Извлечение всех проекторов из базы данных
+	if err := db.Find(&projectors).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to fetch projectors"})
+		return
+	}
+
+	c.JSON(200, projectors)
 }
 
 func getProjector(c *gin.Context) {
@@ -78,7 +112,7 @@ func turnOnProjector(c *gin.Context) {
 	}
 
 	// Включение проектора
-	projector.IsActive = true
+	projector.IsActive = !projector.IsActive
 	db.Save(&projector)
 
 	c.JSON(200, projector)
