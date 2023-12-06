@@ -39,6 +39,7 @@ func main() {
 	r.Run(":8080")
 }
 
+// Создание записи в базе данных
 func createProjector(c *gin.Context) {
 	var projector models.Projector
 	if err := c.ShouldBindJSON(&projector); err != nil {
@@ -46,7 +47,6 @@ func createProjector(c *gin.Context) {
 		return
 	}
 
-	// Создание записи в базе данных
 	if err := db.Create(&projector).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -55,17 +55,16 @@ func createProjector(c *gin.Context) {
 	c.JSON(200, projector)
 }
 
+// Обновление параметров проектора
 func updateProjector(c *gin.Context) {
 	var projector models.Projector
 	id := c.Params.ByName("id")
 
-	// Поиск проектора по ID
 	if err := db.First(&projector, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Projector not found"})
 		return
 	}
 
-	// Обновление параметров проектора
 	if err := c.ShouldBindJSON(&projector); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
@@ -76,10 +75,10 @@ func updateProjector(c *gin.Context) {
 	c.JSON(200, projector)
 }
 
+// Извлечение всех проекторов из базы данных
 func getAllProjectors(c *gin.Context) {
 	var projectors []models.Projector
 
-	// Извлечение всех проекторов из базы данных
 	if err := db.Find(&projectors).Error; err != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch projectors"})
 		return
@@ -88,11 +87,11 @@ func getAllProjectors(c *gin.Context) {
 	c.JSON(200, projectors)
 }
 
+// Поиск проектора по ID
 func getProjector(c *gin.Context) {
 	var projector models.Projector
 	id := c.Params.ByName("id")
 
-	// Поиск проектора по ID
 	if err := db.First(&projector, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Projector not found"})
 		return
@@ -101,34 +100,32 @@ func getProjector(c *gin.Context) {
 	c.JSON(200, projector)
 }
 
+// Включение проектора
 func turnOnProjector(c *gin.Context) {
 	var projector models.Projector
 	id := c.Params.ByName("id")
 
-	// Поиск проектора по ID
 	if err := db.First(&projector, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Projector not found"})
 		return
 	}
 
-	// Включение проектора
 	projector.IsActive = !projector.IsActive
 	db.Save(&projector)
 
 	c.JSON(200, projector)
 }
 
+// Смена режима
 func changeMode(c *gin.Context) {
 	var projector models.Projector
 	id := c.Params.ByName("id")
 
-	// Поиск проектора по ID
 	if err := db.First(&projector, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Projector not found"})
 		return
 	}
 
-	// Смена режима
 	newMode := c.Query("mode")
 	projector.Mode = newMode
 	db.Save(&projector)
@@ -136,17 +133,16 @@ func changeMode(c *gin.Context) {
 	c.JSON(200, projector)
 }
 
+// Изменение разрешения
 func changeResolution(c *gin.Context) {
 	var projector models.Projector
 	id := c.Params.ByName("id")
 
-	// Поиск проектора по ID
 	if err := db.First(&projector, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Projector not found"})
 		return
 	}
 
-	// Изменение разрешения
 	newWidth := c.Query("width")
 	newHeight := c.Query("height")
 
