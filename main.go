@@ -31,6 +31,7 @@ func main() {
 	r.GET("/projectors", getAllProjectors)
 	r.POST("/projectors", createProjector)
 	r.PUT("/projectors/:id", updateProjector)
+	r.DELETE("/projectors/:id", deleteProjector)
 	r.GET("/projectors/:id", getProjector)
 	r.PUT("/projectors/:id/turn", turnOnProjector)
 	r.PUT("/projectors/:id/change-mode", changeMode)
@@ -73,6 +74,24 @@ func updateProjector(c *gin.Context) {
 	db.Save(&projector)
 
 	c.JSON(200, projector)
+}
+
+// Удаление проектора
+func deleteProjector(c *gin.Context) {
+	var projector models.Projector
+	id := c.Params.ByName("id")
+
+	if err := db.First(&projector, id).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Projector not found"})
+		return
+	}
+
+	if err := db.Delete(&projector).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Projector deleted successfully"})
 }
 
 // Извлечение всех проекторов из базы данных
