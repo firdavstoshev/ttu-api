@@ -32,9 +32,9 @@ func main() {
 	r.POST("/projectors", createProjector)
 	r.PUT("/projectors/:id", updateProjector)
 	r.GET("/projectors/:id", getProjector)
-	r.PUT("/projectors/:id/turnon", turnOnProjector)
-	r.PUT("/projectors/:id/changemode", changeMode)
-	r.PUT("/projectors/:id/changeresolution", changeResolution)
+	r.PUT("/projectors/:id/turn", turnOnProjector)
+	r.PUT("/projectors/:id/change-mode", changeMode)
+	r.PUT("/projectors/:id/change-resolution", changeResolution)
 
 	r.Run(":8080")
 }
