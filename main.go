@@ -28,6 +28,8 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(CORSMiddleware())
+
 	r.GET("/projectors", getAllProjectors)
 	r.POST("/projectors", createProjector)
 	r.PUT("/projectors/:id", updateProjector)
@@ -37,7 +39,7 @@ func main() {
 	r.PUT("/projectors/:id/change-mode", changeMode)
 	r.PUT("/projectors/:id/change-resolution", changeResolution)
 
-	r.Run(":8080")
+	r.Run("192.168.43.145:8080")
 }
 
 // Создание записи в базе данных
@@ -176,4 +178,20 @@ func changeResolution(c *gin.Context) {
 	db.Save(&projector)
 
 	c.JSON(200, projector)
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }
